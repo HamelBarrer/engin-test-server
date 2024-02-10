@@ -9,5 +9,6 @@ export interface EventLog {
   name: string;
   description: string;
   date: string;
-  spots: Spots;
+  spotId: number;
+  quantity: number;
 }

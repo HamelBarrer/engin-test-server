@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { EventNotFound, SpotNotFound, SpotNotMinimum } from '../erros/error';
 import {
   allEventLogs,
   allSpots,
@@ -44,34 +45,41 @@ export const getEventLogs = async (_: Request, res: Response) => {
 };
 
 export const createEventLog = async (req: Request, res: Response) => {
-  const data = insertEventLog(req.body);
-  if (data.id === 0) {
-    res.status(400).json({
-      error: 'Spot not found',
-    });
-    return;
-  }
-  if (data.spots.id === 0) {
-    res.status(400).json({
-      error: 'The location does not have the requested amount',
-    });
-    return;
-  }
+  try {
+    const data = insertEventLog(req.body);
+    res.status(201).json(data);
+  } catch (error) {
+    const err = error as Error;
 
-  res.status(201).json(data);
+    if (err instanceof SpotNotFound) {
+      res.status(404).json({
+        error: err.message,
+      });
+      return;
+    }
+    if (err instanceof SpotNotMinimum) {
+      res.status(404).json({
+        error: err.message,
+      });
+      return;
+    }
+  }
 };
 
 export const updateEventLog = async (req: Request, res: Response) => {
-  const eventLogId = Number(req.params.eventLogId);
-  const data = updatedEventLog(eventLogId, req.body);
+  try {
+    const eventLogId = Number(req.params.eventLogId);
+    const data = updatedEventLog(eventLogId, req.body);
 
-  if (data.id === 0) {
-    res.status(404).json({
-      error: 'Event not found',
-    });
+    res.status(200).json(data);
+  } catch (error) {
+    const err = error as Error;
 
-    return;
+    if (err instanceof EventNotFound) {
+      res.status(404).json({
+        error: err.message,
+      });
+      return;
+    }
   }
-
-  res.status(200).json(data);
 };

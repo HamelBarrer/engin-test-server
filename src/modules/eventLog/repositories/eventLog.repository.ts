@@ -1,3 +1,5 @@
+import { ERROR_MESSAGE } from '../constants/error.constant';
+import { EventNotFound, SpotNotFound, SpotNotMinimum } from '../erros/error';
 import { EventLog } from '../models/eventLog.model';
 import { eventLog, spots } from '../store/eventLog.store';
 
@@ -10,6 +12,14 @@ export const findEventLogById = (eventLogId: number) => {
   return data;
 };
 
+export const findSpotById = (spotId: number) => {
+  const data = spots.find((spot) => spot.id === spotId);
+  if (!data) {
+    throw new SpotNotFound(ERROR_MESSAGE.SPOT_NOT_FOUND);
+  }
+  return data;
+};
+
 export const allEventLogs = () => {
   return eventLog.sort((a, b) => b.id - a.id);
 };
@@ -17,28 +27,14 @@ export const allEventLogs = () => {
 export const insertEventLog = (event: EventLog) => {
   event.id = Date.now();
 
-  const spot = spots.find((spot) => spot.id === event.spots.id);
-  if (!spot) {
-    return <EventLog>{
-      id: 0,
-      name: '',
-      description: '',
-      date: '',
-      spots: {},
-    };
-  }
-
-  const newQuantitySpot = spot.quantity - event.spots.quantity;
+  const spot = findSpotById(event.spotId);
+  const newQuantitySpot = spot.quantity - event.quantity;
   if (newQuantitySpot < 0) {
-    return <EventLog>{
-      spots: {
-        id: 0,
-      },
-    };
+    throw new SpotNotMinimum(ERROR_MESSAGE.SPOT_NOT_MINIMUM);
   }
 
-  const spotIndex = spots.findIndex((spot) => spot.id === event.spots.id);
-  spots[spotIndex].quantity -= event.spots.quantity;
+  const spotIndex = spots.findIndex((spot) => spot.id === event.spotId);
+  spots[spotIndex].quantity -= event.quantity;
 
   eventLog.push(event);
   return event;
@@ -47,41 +43,17 @@ export const insertEventLog = (event: EventLog) => {
 export const updatedEventLog = (eventLogId: number, event: EventLog) => {
   const dataIndex = eventLog.findIndex((el) => el.id === eventLogId);
   if (dataIndex < 0) {
-    return <EventLog>{
-      id: 0,
-      name: '',
-      description: '',
-      date: '',
-      spots: {},
-    };
+    throw new EventNotFound(ERROR_MESSAGE.SPOT_NOT_FOUND);
   }
 
-  const spot = spots.find((spot) => spot.id === event.spots.id);
-  if (!spot) {
-    return <EventLog>{
-      id: 0,
-      name: '',
-      description: '',
-      date: '',
-      spots: {},
-    };
-  }
-
-  const newQuantitySpot = spot.quantity - event.spots.quantity;
+  const spot = findSpotById(event.spotId);
+  const newQuantitySpot = spot.quantity - event.quantity;
   if (newQuantitySpot < 0) {
-    return <EventLog>{
-      id: 0,
-      name: '',
-      description: '',
-      date: '',
-      spots: {
-        id: 0,
-      },
-    };
+    throw new SpotNotMinimum(ERROR_MESSAGE.SPOT_NOT_MINIMUM);
   }
 
-  const spotIndex = spots.findIndex((spot) => spot.id === event.spots.id);
-  spots[spotIndex].quantity -= event.spots.quantity;
+  const spotIndex = spots.findIndex((spot) => spot.id === event.spotId);
+  spots[spotIndex].quantity -= event.quantity;
 
   const eventLogRegister = findEventLogById(eventLogId);
   event.id = eventLogRegister!.id;
