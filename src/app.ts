@@ -12,6 +12,6 @@ app.use(cors());
 
 app.use('/api/v1/bookstore', bookstoreRouter);
 app.use('/api/v1/event-logs', eventLogRouter);
-app.use('/api/v1/books', bookCatalogRouter);
+app.use('/api/v1/book-catalog', bookCatalogRouter);
 
 export default app;
